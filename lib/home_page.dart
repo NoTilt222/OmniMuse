@@ -1,9 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:open_file/open_file.dart';
+import 'dart:io';
+import 'package:path_provider/path_provider.dart';
+import 'package:http/http.dart';
 import 'package:omnimuse/pallete.dart';
 import 'package:omnimuse/power_box.dart';
+import 'package:omnimuse/services/openai_services.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:speech_to_text/speech_to_text.dart';
 import 'package:speech_to_text/speech_recognition_result.dart';
-
+import 'package:flutter_tts/flutter_tts.dart';
 class HomePage extends StatefulWidget {
   const HomePage({Key? key}) : super(key: key);
 
@@ -13,14 +19,28 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   final speechToText = SpeechToText();
+  final FlutterTts flutterTts = FlutterTts();
   bool speechEnabled = false;
   String lastWords = '';
+  String? generatedContent;
+  String? generatedImageUrl;
   bool is_on = false;
+  final OpenAIService openAIService = OpenAIService();
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
     initSpeechToText();
+    initTextToSpeech();
+  }
+  Future<void> initTextToSpeech() async{
+    try {
+      await flutterTts.setSharedInstance(true);
+      setState(() {});
+    }
+    catch(e){
+      print('Failed to initialize speech to text: $e');
+    }
   }
   void initSpeechToText() async {
     try {
@@ -57,35 +77,155 @@ class _HomePageState extends State<HomePage> {
       lastWords = result.recognizedWords;
     });
   }
-  Container prompt(){
+  Container imageContainer() {
+    if (generatedImageUrl == null) {
+      // Return a placeholder or empty container for the null case
+      return Container();
+    }
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-      margin: const EdgeInsets.symmetric(horizontal: 40,).copyWith(top: 30),
+      margin: const EdgeInsets.symmetric(horizontal: 40).copyWith(top: 30),
       decoration: BoxDecoration(
-          color: Color.fromRGBO(130, 130, 130, 0.21),
-          border: Border.all(
-              color: Pallete.borderColor
+        color: Color.fromRGBO(130, 130, 130, 0.21),
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.5),
+            spreadRadius: 3,
+            blurRadius: 5,
+            offset: Offset(0, 3),
           ),
-          borderRadius: BorderRadius.circular(20).copyWith(
-              topRight: Radius.zero
-          )
+        ],
       ),
-      child:  Padding(
-        padding:  EdgeInsets.symmetric(vertical: 10),
-        child:  Text(lastWords,
-            style: TextStyle(
-                color: Pallete.mainFontColor,
-                fontFamily: 'Cera Pro',
-                fontSize: 18
-            )),
+          child: GestureDetector(
+    onTap: () {
+    downloadImage(generatedImageUrl!);
+    },
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(20),
+        child: Image.network(
+          generatedImageUrl!,
+          fit: BoxFit.cover,
+        ),
       ),
+    ));
+  }
+  Future<void> downloadImage(String imageUrl) async {
+    try {
+      var status = await Permission.storage.request();
+      if (!status.isGranted) {
+        print('Storage permission denied');
+        return;
+      }
+
+      var directory = await getExternalStorageDirectory();
+      var time = DateTime.now().microsecondsSinceEpoch;
+      var path = '${directory?.path}/image-$time.jpg';
+      var file = File(path);
+      var response = await get(Uri.parse(imageUrl));
+      await file.writeAsBytes(response.bodyBytes);
+
+      print('Image downloaded successfully at: $path');
+      await ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          backgroundColor: Colors.blueGrey[800],
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
+          content: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Row(
+                children: [
+                  Icon(
+                    Icons.check_circle,
+                    color: Colors.green,
+                  ),
+                  SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      'Image downloaded successfully at:',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 16,
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ],
+              ),
+              SizedBox(height: 5),
+              Text(
+                path,
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 14,
+                ),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ],
+          ),
+          duration: Duration(seconds: 3),
+        ),
+      );
+      // Open the saved file
+      showOpenFileDialog(context, file);
+    } catch (error) {
+      print('Error while downloading image: $error');
+    }
+  }
+  void showOpenFileDialog(BuildContext context, File filePath) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Open File'),
+          content: Text('Do you want to open the file?'),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(); // Close the dialog
+              },
+              child: Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(); // Close the dialog
+                openFile(filePath); // Open the file
+              },
+              child: Text('Open'),
+            ),
+          ],
+        );
+      },
     );
+  }
+
+  Future<void> openFile(File file) async {
+    try {
+      if (await file.exists()) {
+        // Open the file using the default file opener on the device
+        await OpenFile.open(file.path);
+      } else {
+        print('File does not exist');
+      }
+    } catch (error) {
+      print('Error while opening file: $error');
+    }
   }
   @override
   void dispose() {
     // TODO: implement dispose
     super.dispose();
     speechToText.stop();
+    flutterTts.stop();
+  }
+
+  Future<void> systemSpeak(String content) async{
+    await flutterTts.speak(content);
   }
   @override
   Widget build(BuildContext context) {
@@ -175,18 +315,20 @@ class _HomePageState extends State<HomePage> {
                     topLeft: Radius.zero
                   )
                 ),
-                child: const Padding(
+                child:  Padding(
                   padding:  EdgeInsets.symmetric(vertical: 10),
-                  child:  Text('Hello, I am OmniMuse! What can i do for you?',
+                  child:  Text(
+                      generatedContent== null ?'Hello, I am OmniMuse! What can i do for you?'
+                          : generatedContent!,
                   style: TextStyle(
                     color: Pallete.mainFontColor,
                     fontFamily: 'Cera Pro',
-                    fontSize: 18
+                    fontSize: generatedContent == null? 18 : 16
                   )),
                 ),
               ),
-              Visibility(child: prompt(),
-              visible: is_on ),
+              Visibility(child: imageContainer(),
+              visible: generatedImageUrl == null? false : true ),
               Container(
                 padding: EdgeInsets.all(10),
                 alignment: Alignment.centerLeft,
@@ -233,6 +375,17 @@ class _HomePageState extends State<HomePage> {
             });
           } else if (speechToText.isListening) {
             print('Stopping speech recognition');
+            final speech = await openAIService.isArtPromptAPI(lastWords);
+            if(speech.contains('https')){
+              generatedImageUrl = speech;
+              generatedContent = null;
+              setState(() {});
+            }else{
+              generatedImageUrl = null;
+              generatedContent = speech;
+              setState(() {});
+              await systemSpeak(speech);
+            }
             await stopListening();
             setState(() {
               is_on = false;
