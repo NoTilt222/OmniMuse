@@ -20,7 +20,7 @@ class _LoadingState extends State<Loading> {
 
   void initLoad() async{
     await Future.delayed(const Duration(seconds: 3));
-    Navigator.pushReplacementNamed(context, '/home');
+    Navigator.pushReplacementNamed(context, '/login');
   }
   @override
   Widget build(BuildContext context) {

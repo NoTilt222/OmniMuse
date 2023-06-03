@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "701929335375",
+    "project_id": "authomnimuse-bc130",
+    "storage_bucket": "authomnimuse-bc130.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:701929335375:android:41ac2385944cc18cd7d83a",
+        "android_client_info": {
+          "package_name": "com.example.omnimuse"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD9okIpHnorlZoR3NtdKfXdH0Zyu9u1OJM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

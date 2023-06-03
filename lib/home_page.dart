@@ -1,3 +1,5 @@
+import 'package:animate_do/animate_do.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:open_file/open_file.dart';
 import 'dart:io';
@@ -25,6 +27,8 @@ class _HomePageState extends State<HomePage> {
   String? generatedContent;
   String? generatedImageUrl;
   bool is_on = false;
+  int start = 200;
+  int delay = 200;
   final OpenAIService openAIService = OpenAIService();
   @override
   void initState() {
@@ -216,6 +220,10 @@ class _HomePageState extends State<HomePage> {
       print('Error while opening file: $error');
     }
   }
+  void signUserOut(){
+    FirebaseAuth.instance.signOut();
+    Navigator.pushReplacementNamed(context, '/login');
+  }
   @override
   void dispose() {
     // TODO: implement dispose
@@ -231,10 +239,12 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('OmniMuse',
-        style: TextStyle(
-          fontWeight: FontWeight.bold
-        ),),
+        title: BounceInDown(
+          child: const Text('OmniMuse',
+          style: TextStyle(
+            fontWeight: FontWeight.bold
+          ),),
+        ),
         leading: Builder(
           builder: (BuildContext context) {
             return IconButton(
@@ -246,6 +256,9 @@ class _HomePageState extends State<HomePage> {
           },
         ),
         centerTitle: true,
+        actions: [
+          IconButton(onPressed: signUserOut, icon: Icon(Icons.logout_rounded))
+        ],
       ),
       drawer: Drawer(
         // Add your drawer content here
@@ -253,15 +266,48 @@ class _HomePageState extends State<HomePage> {
           padding: EdgeInsets.zero,
           children: [
             DrawerHeader(
-              child: Text('Drawer Header'),
+              child: Column(
+                children: [
+                  Text('Profile',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 20,
+                    fontFamily: 'Cera Pro',
+                    fontWeight: FontWeight.bold
+                  ),
+                  ),
+                  SizedBox(
+                    height: 30,
+                  ),
+                  Row(
+                    children: [
+                      Text('Timothy Mentowidjojo',
+                      style: TextStyle(
+                        color: Pallete.whiteColor,
+                      ),),
+                      SizedBox(width: 20,
+                      ),
+                      CircleAvatar(
+                        child: Image.asset('assets/images/robot.png'),
+                        radius: 30,
+                      )
+                    ],
+                  )
+                ],
+              ),
               decoration: BoxDecoration(
-                color: Colors.blue,
+                color: Colors.black,
               ),
             ),
             ListTile(
-              title: Text('Item 1'),
+              title: Text("Settings",
+                  style: TextStyle(
+                  color: Colors.black,
+                  fontSize: 18,
+                  fontFamily: 'Cera Pro',
+                  fontWeight: FontWeight.bold)),
               onTap: () {
-                // Handle drawer item tap
+                Navigator.pushNamed(context, '/settings');
               },
             ),
             ListTile(
@@ -280,15 +326,16 @@ class _HomePageState extends State<HomePage> {
           child: Column(
             children: [
               SizedBox(height: 5),
-              Stack(
-                children: [
-                  //OmniMuse assistant
-                  Center(
-                    child: Container(
-                      height: 120,
-                      width: 120,
-                      decoration: BoxDecoration(
-                        color: Pallete.assistantCircleColor,
+              ZoomIn(
+                  child:Stack(
+                  children: [
+                    //OmniMuse assistant
+                    Center(
+                      child: Container(
+                        height: 120,
+                        width: 120,
+                        decoration: BoxDecoration(
+                          color: Pallete.assistantCircleColor,
                         shape: BoxShape.circle,
                       ),
                     ),
@@ -301,60 +348,73 @@ class _HomePageState extends State<HomePage> {
                     ),
                   )
                 ],
-              ),
+              ),),
               //chat bubble
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                margin: const EdgeInsets.symmetric(horizontal: 40,).copyWith(top: 30),
-                decoration: BoxDecoration(
-                    color: Color.fromRGBO(130, 130, 130, 0.21),
-                  border: Border.all(
-                      color: Pallete.borderColor
+              FadeInLeft(
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                  margin: const EdgeInsets.symmetric(horizontal: 40,).copyWith(top: 30),
+                  decoration: BoxDecoration(
+                      color: Color.fromRGBO(130, 130, 130, 0.21),
+                    border: Border.all(
+                        color: Pallete.borderColor
+                    ),
+                    borderRadius: BorderRadius.circular(20).copyWith(
+                      topLeft: Radius.zero
+                    )
                   ),
-                  borderRadius: BorderRadius.circular(20).copyWith(
-                    topLeft: Radius.zero
-                  )
-                ),
-                child:  Padding(
-                  padding:  EdgeInsets.symmetric(vertical: 10),
-                  child:  Text(
-                      generatedContent== null ?'Hello, I am OmniMuse! What can i do for you?'
-                          : generatedContent!,
-                  style: TextStyle(
-                    color: Pallete.mainFontColor,
-                    fontFamily: 'Cera Pro',
-                    fontSize: generatedContent == null? 18 : 16
-                  )),
+                  child:  Padding(
+                    padding:  EdgeInsets.symmetric(vertical: 10),
+                    child:  Text(
+                        generatedContent== null ?'Hello, I am OmniMuse! What can i do for you?'
+                            : generatedContent!,
+                    style: TextStyle(
+                      color: Pallete.mainFontColor,
+                      fontFamily: 'Cera Pro',
+                      fontSize: generatedContent == null? 18 : 16
+                    )),
+                  ),
                 ),
               ),
               Visibility(child: imageContainer(),
               visible: generatedImageUrl == null? false : true ),
-              Container(
-                padding: EdgeInsets.all(10),
-                alignment: Alignment.centerLeft,
-                margin: const EdgeInsets.only(top:10, left: 22),
-                child: const Text('Here are some of my powers',
-                style: TextStyle(
-                  fontFamily: 'Cera Pro',
-                  color: Pallete.mainFontColor,
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold
-                ),),
+              SlideInLeft(
+                child: Container(
+                  padding: EdgeInsets.all(10),
+                  alignment: Alignment.centerLeft,
+                  margin: const EdgeInsets.only(top:10, left: 22),
+                  child: const Text('Here are some of my powers',
+                  style: TextStyle(
+                    fontFamily: 'Cera Pro',
+                    color: Pallete.mainFontColor,
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold
+                  ),),
+                ),
               ),
               //Power list
-              Column(
+               Column(
                 children: [
-                  PowerBox(color: Pallete.firstPowerBoxColor,
-                    headerText: 'ChatGPT',
-                    descriptionText: 'Where conversation transcends limits, knowledge comes alive.',
+                  SlideInLeft(
+                    delay: Duration(milliseconds: start),
+                    child: const PowerBox(color: Pallete.firstPowerBoxColor,
+                      headerText: 'ChatGPT',
+                      descriptionText: 'Where conversation transcends limits, knowledge comes alive.',
+                    ),
                   ),
-                  PowerBox(color: Pallete.secondPowerBoxColor,
-                    headerText: 'Dall-E',
-                    descriptionText: 'AI wizardry creating mind-blowing digital art.',
+                  SlideInLeft(
+                    delay: Duration(milliseconds: start + delay),
+                    child: const PowerBox(color: Pallete.secondPowerBoxColor,
+                      headerText: 'Dall-E',
+                      descriptionText: 'AI wizardry creating mind-blowing digital art.',
+                    ),
                   ),
-                  PowerBox(color: Pallete.thirdPowerBoxColor,
-                    headerText: 'Omni Voice Assistant',
-                    descriptionText: 'Unleash limitless possibilities with the coolest voice assistant powered by ChatGPT and Dall-E by your side.',
+                  SlideInLeft(
+                    delay: Duration(milliseconds: start + 2* delay),
+                    child: const PowerBox(color: Pallete.thirdPowerBoxColor,
+                      headerText: 'Omni Voice Assistant',
+                      descriptionText: 'Unleash limitless possibilities with the coolest voice assistant powered by ChatGPT and Dall-E by your side.',
+                    ),
                   ),
                 ],
               )
@@ -362,40 +422,43 @@ class _HomePageState extends State<HomePage> {
           ),
         );}
       ),
-      floatingActionButton: FloatingActionButton(
-        backgroundColor: Pallete.firstPowerBoxColor,
-        onPressed: () async {
-          print('Button pressed');
+      floatingActionButton: ZoomIn(
+        delay: Duration(milliseconds: start + 3* delay),
+        child: FloatingActionButton(
+          backgroundColor: Pallete.firstPowerBoxColor,
+          onPressed: () async {
+            print('Button pressed');
 
-          if (await speechToText.hasPermission && speechToText.isNotListening) {
-            print('Starting speech recognition');
-            await startListening();
-            setState(() {
-              is_on = true;
-            });
-          } else if (speechToText.isListening) {
-            print('Stopping speech recognition');
-            final speech = await openAIService.isArtPromptAPI(lastWords);
-            if(speech.contains('https')){
-              generatedImageUrl = speech;
-              generatedContent = null;
-              setState(() {});
-            }else{
-              generatedImageUrl = null;
-              generatedContent = speech;
-              setState(() {});
-              await systemSpeak(speech);
+            if (await speechToText.hasPermission && speechToText.isNotListening) {
+              print('Starting speech recognition');
+              await startListening();
+              setState(() {
+                is_on = true;
+              });
+            } else if (speechToText.isListening) {
+              print('Stopping speech recognition');
+              final speech = await openAIService.isArtPromptAPI(lastWords);
+              if(speech.contains('https')){
+                generatedImageUrl = speech;
+                generatedContent = null;
+                setState(() {});
+              }else{
+                generatedImageUrl = null;
+                generatedContent = speech;
+                setState(() {});
+                await systemSpeak(speech);
+              }
+              await stopListening();
+              setState(() {
+                is_on = false;
+              });
+            } else {
+              print('Initializing speech recognition');
+               initSpeechToText();
             }
-            await stopListening();
-            setState(() {
-              is_on = false;
-            });
-          } else {
-            print('Initializing speech recognition');
-             initSpeechToText();
-          }
-        },
-        child: const Icon(Icons.mic_rounded),
+          },
+          child:  Icon(speechToText.isListening? Icons.stop : Icons.mic_rounded),
+        ),
       ),
     );
   }
