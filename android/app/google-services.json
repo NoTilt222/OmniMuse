@@ -12,7 +12,20 @@
           "package_name": "com.example.omnimuse"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "701929335375-qag3bk598s76ler0li61t4unk99u5iev.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.omnimuse",
+            "certificate_hash": "b671a73264c378fe793680bc6587db5df89af915"
+          }
+        },
+        {
+          "client_id": "701929335375-uqi0psr61ughqel728e90glnp74ldpb4.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyD9okIpHnorlZoR3NtdKfXdH0Zyu9u1OJM"
@@ -20,7 +33,19 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "701929335375-uqi0psr61ughqel728e90glnp74ldpb4.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "701929335375-crpqtsf351o5nb8jkv0rge2shq1julju.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.omnimuse.RunnerTests"
+              }
+            }
+          ]
         }
       }
     }

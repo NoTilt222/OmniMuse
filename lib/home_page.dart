@@ -1,6 +1,7 @@
 import 'package:animate_do/animate_do.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 import 'package:open_file/open_file.dart';
 import 'dart:io';
 import 'package:path_provider/path_provider.dart';
@@ -20,6 +21,7 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
+  final GoogleSignIn _googleSignIn = GoogleSignIn();
   final speechToText = SpeechToText();
   final FlutterTts flutterTts = FlutterTts();
   bool speechEnabled = false;
@@ -220,8 +222,9 @@ class _HomePageState extends State<HomePage> {
       print('Error while opening file: $error');
     }
   }
-  void signUserOut(){
+  void signUserOut()async{
     FirebaseAuth.instance.signOut();
+    await _googleSignIn.disconnect();
     Navigator.pushReplacementNamed(context, '/login');
   }
   @override

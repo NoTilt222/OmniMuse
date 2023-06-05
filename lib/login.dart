@@ -6,7 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:omnimuse/components/square_tile.dart';
 import 'package:omnimuse/pallete.dart';
 import 'package:omnimuse/utils/login_data.dart';
-
+import 'package:google_sign_in/google_sign_in.dart';
 import 'components/custom_button.dart';
 import 'components/custom_text_field.dart';
 import 'utils/custom_theme.dart';
@@ -20,6 +20,7 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
+
   final TextEditingController email = TextEditingController();
   final TextEditingController password = TextEditingController();
   final TextEditingController confirmPassword = TextEditingController();
@@ -97,7 +98,33 @@ class _LoginPageState extends State<LoginPage> {
       print(e);
     }
   }
+  Future<void> signInWithGoogle() async {
+    // Trigger the authentication flow
+    final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
 
+    // Obtain the auth details from the request
+    final GoogleSignInAuthentication? googleAuth = await googleUser?.authentication;
+
+    // Create a new credential
+    final credential = GoogleAuthProvider.credential(
+      accessToken: googleAuth?.accessToken,
+      idToken: googleAuth?.idToken,
+    );
+
+    // Sign in with the credential
+    final UserCredential userCredential = await FirebaseAuth.instance.signInWithCredential(credential);
+
+    // Check if the sign-in was successful
+    if (userCredential.user != null) {
+      // Navigate to the home page
+      Navigator.pushReplacementNamed(context, '/home');
+    }
+  }
+
+  // Future<void> signOutGoogle() async {
+  //   await _googleSignIn.signOut();
+  //   print("User signed out");
+  // }
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -152,9 +179,10 @@ class _LoginPageState extends State<LoginPage> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  SquareTile(imagePath: 'assets/images/google.png', onPressed: (){print('Google');},),
+                  SquareTile(imagePath: 'assets/images/google.png', onPressed: (){signInWithGoogle();},),
                   SizedBox(width: 5,),
-                  SquareTile(imagePath: 'assets/images/apple.png', onPressed: (){print('Apple');},),
+                  SquareTile(imagePath: 'assets/images/apple.png', onPressed: (){
+                  },),
                 ],
               ),
             ],
